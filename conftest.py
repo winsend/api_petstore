@@ -1,0 +1,39 @@
+import pytest
+import allure
+from utils.api_client import PetStoreClient
+
+
+# Фикстура для API клиента
+@pytest.fixture(scope="session")
+def api_client():
+    """Создаёт экземпляр API клиента для всех тестов"""
+    client = PetStoreClient()
+    yield client
+    # Здесь можно добавить очистку, если нужно
+
+
+# Хук для Allure — скриншоты/логи при падении (для API не скриншоты, но полезная информация)
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+
+    if report.when == "call" and report.failed:
+        try:
+            # Можно добавить attachment с текстом ошибки
+            allure.attach(
+                f"Test failed: {report.longrepr.text if hasattr(report.longrepr, 'text') else str(report.longrepr)}",
+                name="Error Details",
+                attachment_type=allure.attachment_type.TEXT
+            )
+        except Exception:
+            pass
+
+
+# Настройка Allure
+def pytest_configure(config):
+    config._metadata = {
+        "Project": "Petstore API",
+        "Framework": "Pytest + Requests",
+        "Author": "Влад Лизогуб"
+    }
