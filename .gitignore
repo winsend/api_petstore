@@ -29,8 +29,6 @@ allure-report/
 *.swp
 *.swo
 
-
-
 .Python
 build/
 develop-eggs/
