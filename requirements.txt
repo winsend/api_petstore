@@ -5,3 +5,4 @@ allure-pytest==2.13.5
 jsonschema==4.23.0
 python-dotenv==1.0.1
 Faker==40.19.0
+pydantic==2.10.6

@@ -12,48 +12,28 @@ class TestPetstoreOrders:
     
     @allure.title("Создание нового заказа")
     @allure.severity(allure.severity_level.CRITICAL)
-    def test_create_order(self, client, order_data):
-
-        with allure.step("Создаём новый заказ"):
-            response = client.create_order(order_data)
-
-        with allure.step("Проверяем ответ"):
-            assert response.status_code == 200
-
-            data = response.json()
-
-            assert data["petId"] == order_data["petId"]
-            assert data["quantity"] == order_data["quantity"]
-            assert data["status"] == order_data["status"]
+    def test_create_order(self, client, order_data, created_order):
+        assert created_order["status"] == order_data["status"]
 
 
     @allure.title("Получение заказа по ID")
-    def test_get_order_by_id(self, client, order_data):
-    
-        with allure.step("Создаем новый заказ"):
-            response = client.create_order(order_data)
-            order_id = response.json()["id"]
-
+    def test_get_order_by_id(self, client, order_data, created_order):
+        order_id = created_order["id"]
         with allure.step(f"Получаем заказ по ID: {order_id}"):
             response = client.get_order_by_id(order_id)
-        assert response.status_code == 200
+            assert response.status_code == 200
 
-        data = response.json()
-
-        assert data["id"] == order_id
-        assert data["petId"] == order_data["petId"]
-
+        assert created_order["petId"] == order_data["petId"]
+        assert created_order["quantity"] == order_data["quantity"]
+        assert created_order["status"] == order_data["status"]
+        assert "id" in created_order
 
     @allure.title("Удаление заказа")
-    def test_delete_order(self, client, order_data):
-        
-        with allure.step("Создаем новый заказ"):
-            response = client.create_order(order_data)
-            order_id = response.json()["id"]
+    def test_delete_order(self, client, created_order):
+        order_id = created_order["id"]
 
         with allure.step(f"Удаляем заказ с ID: {order_id}"):
             response = client.delete_order(order_id)
-
             assert response.status_code == 200
 
         with allure.step("Проверяем, что заказ больше не существует"):

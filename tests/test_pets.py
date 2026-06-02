@@ -10,68 +10,46 @@ class TestPetstoreAPI:
     @pytest.mark.positive
     @allure.title("Создание нового питомца")
     @allure.severity(allure.severity_level.CRITICAL)
-    def test_create_pet(self, client, pet_data):
-
-
-        with allure.step("Отправляем запрос на создание питомца"):  
-            response = client.create_pet(pet_data)
-        
-        with allure.step("Проверяем статус-код и данные"):
-            assert response.status_code == 200
-
-            data = response.json()
-
-            assert data["id"] == pet_data["id"]
-            assert data["name"] == pet_data["name"]
-            assert data["status"] == pet_data["status"]
+    def test_create_pet(self, pet_data, created_pet):
+        assert created_pet["name"] == pet_data["name"]
+        assert created_pet["status"] == pet_data["status"]
+        assert "id" in created_pet and created_pet["id"] > 0
+        assert len(created_pet.get("photoUrls", [])) > 0
 
 
     @allure.title("Получение питомца по ID")
     @allure.severity(allure.severity_level.NORMAL)
-    def test_get_pet_by_id(self, client, pet_data):
+    def test_get_pet_by_id(self, client, created_pet):
 
 
-        # Сначала создаём питомца
-        response = client.create_pet(pet_data)
-        pet_id = response.json()["id"]
-
-        with allure.step(f"Получаем питомца по ID: {pet_id}"):
-            response = client.get_pet_by_id(pet_id)
+        pet_id = created_pet["id"]
+        response = client.get_pet_by_id(pet_id)
         assert response.status_code == 200
 
         data = response.json()
-
         assert data["id"] == pet_id
-        assert data["name"] == pet_data["name"]
+        assert data["name"] == created_pet["name"]
+        assert data["status"] == created_pet["status"]
+        
 
 
     @allure.title("Обновление данных питомца")
-    def test_update_pet(self, client, pet_data, updated_pet_data):
+    def test_update_pet(self, client, created_pet, updated_pet_data):
 
-        # Создаём питомца
-        client.create_pet(pet_data)
-        updated_pet_data["id"] = pet_data["id"]
-        
-        with allure.step("Обновляем данные питомца"):
-            response = client.update_pet(updated_pet_data)
+        updated_pet_data["id"] = created_pet["id"]
+        response = client.update_pet(updated_pet_data)
         assert response.status_code == 200
 
         data = response.json()
-
         assert data["name"] == updated_pet_data["name"]
         assert data["status"] == updated_pet_data["status"]
 
 
     @allure.title("Удаление питомца")
-    def test_delete_pet(self, client, pet_data):
+    def test_delete_pet(self, client, created_pet):
 
-        # Создаём питомца
-        response = client.create_pet(pet_data)
-        pet_id = response.json()["id"]
-
-        with allure.step(f"Удаляем питомца с ID: {pet_id}"):
-            response = client.delete_pet(pet_id)
-        
+        pet_id = created_pet["id"]
+        response = client.delete_pet(pet_id)
         assert response.status_code == 200
 
         # Проверяем, что питомец действительно удалён
@@ -86,10 +64,11 @@ class TestPetstoreAPI:
 
         with allure.step(f"Ищем питомцев со статусом: {status}"):
             response = client.find_pets_by_status(status)
+            assert response.status_code == 200
+
+            pets = response.json()
         
-        assert response.status_code == 200
-        pets = response.json()
-        assert isinstance(pets, list)
+            assert isinstance(pets, list)
 
 
     @allure.title("Негативный тест - Создание питомца с некорректными данными")

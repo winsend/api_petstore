@@ -28,6 +28,57 @@ def updated_order_data():
     return OrderFactory.create_data_order(status="closed")
 
 
+
+@pytest.fixture(scope="function")
+def created_pet(client: PetStoreClient, pet_data):
+    """Создаёт питомца и автоматически удаляет его после теста"""
+    with allure.step("Создаём питомца для теста"):
+        response = client.create_pet(pet_data)
+        assert response.status_code == 200
+
+        pet = response.json()
+        
+        pet_id = pet["id"]
+        allure.attach(str(pet_id), name="Created Pet ID", attachment_type=allure.attachment_type.TEXT)
+
+    yield pet  # возвращаем созданного питомца в тест
+
+    # === CLEANUP ===
+    with allure.step(f"Cleanup: Удаляем питомца ID={pet_id}"):
+        try:
+            delete_response = client.delete_pet(pet_id)
+            if delete_response.status_code not in (200, 404):
+                allure.attach(f"Warning: Delete returned {delete_response.status_code}", 
+                             name="Cleanup Warning", 
+                             attachment_type=allure.attachment_type.TEXT)
+        except Exception as e:
+            allure.attach(str(e), name="Cleanup Error", attachment_type=allure.attachment_type.TEXT)
+
+
+@pytest.fixture(scope="function")
+def created_order(client: PetStoreClient, order_data):
+    """Создаёт заказ и автоматически удаляет его после теста"""
+    with allure.step("Создаём заказ для теста"):
+        response = client.create_order(order_data)
+        assert response.status_code == 200
+        order = response.json()
+        order_id = order["id"]
+        allure.attach(str(order_id), name="Created Order ID", attachment_type=allure.attachment_type.TEXT)
+
+    yield order
+
+    # === CLEANUP ===
+    with allure.step(f"Cleanup: Удаляем заказ ID={order_id}"):
+        try:
+            delete_response = client.delete_order(order_id)
+            if delete_response.status_code not in (200, 404):
+                allure.attach(f"Warning: Delete order returned {delete_response.status_code}", 
+                             name="Cleanup Warning", 
+                             attachment_type=allure.attachment_type.TEXT)
+        except Exception as e:
+            allure.attach(str(e), name="Cleanup Error", attachment_type=allure.attachment_type.TEXT)
+
+            
 # Хук для Allure — скриншоты/логи при падении (для API не скриншоты, но полезная информация)
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
