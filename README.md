@@ -4,29 +4,33 @@
 
 ## Stack
 
-* Python 3.x
+* Python 3.11+
 * Pytest
 * Requests
 * Allure Report
-* JSON Schema Validation
+* Pydantic v2
+* Faker
+* Factory Pattern
 
 ## Project Structure
-
 ```text
 Petstore/
+├── factories/           # Фабрики тестовых данных
+│   ├── pet_factory.py
+│   └── order_factory.py
 │
-├── data/
-│   └── test_data.py
+├── models/              # Pydantic модели
+│   ├── pet.py
+│   └── order.py
+│
+├── utils/
+│   └── api_client.py  
 │
 ├── tests/
 │   ├── test_pets.py
 │   └── test_orders.py
 │
-├── utils/
-│   ├── api_client.py
-│   └── schemas.py
-│
-├── conftest.py
+├── conftest.py          # Фикстуры + cleanup
 ├── requirements.txt
 └── README.md
 ```
@@ -35,7 +39,6 @@ Petstore/
 
 * CRUD операции для Pet API
 * CRUD операции для Store Order API
-* JSON Schema Validation
 * Allure Reporting
 * Pytest Fixtures
 * Parametrized Tests

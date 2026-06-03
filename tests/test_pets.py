@@ -6,6 +6,8 @@ from models.pet import Pet
 
 from models.pet import Pet
 
+from models.pet import Pet
+
 @allure.feature("Petstore API")
 @allure.story("Управление питомцами")
 class TestPetstoreAPI:
@@ -31,9 +33,6 @@ class TestPetstoreAPI:
         assert pet.name == created_pet.name
         assert pet.status == created_pet.status
 
-        assert pet.id == created_pet.id
-        assert pet.name == created_pet.name
-        assert pet.status == created_pet.status
 
   
     @allure.title("Обновление данных питомца")

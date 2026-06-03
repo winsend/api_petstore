@@ -54,5 +54,3 @@ class TestPetstoreOrders:
 
         assert isinstance(data, dict)
         assert len(data) > 0
-
-    
