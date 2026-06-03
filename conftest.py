@@ -4,82 +4,74 @@ from utils.api_client import PetStoreClient
 from factories.pet_factory import PetFactory
 from factories.order_factory import OrderFactory
 
-# Фикстура для API клиента
+
+
 @pytest.fixture(scope="session")
 def client():
-    """Создаёт экземпляр API клиента для всех тестов"""
     client = PetStoreClient()
     yield client
 
-@pytest.fixture
-def pet_data():
-    return PetFactory.create_data_pet()
-
-@pytest.fixture
-def updated_pet_data():
-    return PetFactory.create_data_pet(status="sold")
-
-@pytest.fixture
-def order_data():
-    return OrderFactory.create_data_order()
-
-@pytest.fixture
-def updated_order_data():
-    return OrderFactory.create_data_order(status="closed")
-
-
 
 @pytest.fixture(scope="function")
-def created_pet(client: PetStoreClient, pet_data):
-    """Создаёт питомца и автоматически удаляет его после теста"""
+def created_pet(client: PetStoreClient):
+    pet = PetFactory.create(status="available")
+    
     with allure.step("Создаём питомца для теста"):
-        response = client.create_pet(pet_data)
-        assert response.status_code == 200
-
-        pet = response.json()
+        response = client.create_pet(pet)
+        assert response.status_code == 200, f"Failed to create pet: {response.text}"
         
-        pet_id = pet["id"]
+        created_data = response.json()
+        pet_id = created_data["id"]
         allure.attach(str(pet_id), name="Created Pet ID", attachment_type=allure.attachment_type.TEXT)
 
-    yield pet  # возвращаем созданного питомца в тест
+        pet = pet.model_copy(update={"id": pet_id})
 
-    # === CLEANUP ===
+        allure.attach(str(pet_id), name="Created Pet ID", attachment_type=allure.attachment_type.TEXT)
+
+    yield pet  
+
+    
     with allure.step(f"Cleanup: Удаляем питомца ID={pet_id}"):
         try:
-            delete_response = client.delete_pet(pet_id)
-            if delete_response.status_code not in (200, 404):
-                allure.attach(f"Warning: Delete returned {delete_response.status_code}", 
-                             name="Cleanup Warning", 
-                             attachment_type=allure.attachment_type.TEXT)
+            client.delete_pet(pet_id)
         except Exception as e:
             allure.attach(str(e), name="Cleanup Error", attachment_type=allure.attachment_type.TEXT)
 
 
+
+
 @pytest.fixture(scope="function")
-def created_order(client: PetStoreClient, order_data):
-    """Создаёт заказ и автоматически удаляет его после теста"""
+def created_order(client: PetStoreClient):
+    order = OrderFactory.create(status="placed")
+    order_id = None
+
     with allure.step("Создаём заказ для теста"):
-        response = client.create_order(order_data)
-        assert response.status_code == 200
-        order = response.json()
-        order_id = order["id"]
+        response = client.create_order(order)
+        
+        if response.status_code != 200:
+            allure.attach(response.text[:1000], name="Create Order Error Response", attachment_type=allure.attachment_type.TEXT)
+        
+        assert response.status_code == 200, f"Не удалось создать заказ: {response.status_code} - {response.text[:400]}"
+        
+        created_data = response.json()
+        order_id = created_data.get("id")
+        assert order_id is not None, "В ответе нет ID заказа"
+
+        order = order.model_copy(update={"id": order_id})
+
         allure.attach(str(order_id), name="Created Order ID", attachment_type=allure.attachment_type.TEXT)
 
     yield order
 
-    # === CLEANUP ===
-    with allure.step(f"Cleanup: Удаляем заказ ID={order_id}"):
-        try:
-            delete_response = client.delete_order(order_id)
-            if delete_response.status_code not in (200, 404):
-                allure.attach(f"Warning: Delete order returned {delete_response.status_code}", 
-                             name="Cleanup Warning", 
-                             attachment_type=allure.attachment_type.TEXT)
-        except Exception as e:
-            allure.attach(str(e), name="Cleanup Error", attachment_type=allure.attachment_type.TEXT)
+    if order_id:
+        with allure.step(f"Cleanup: Удаляем заказ {order_id}"):
+            try:
+                client.delete_order(order_id)
+            except:
+                pass
 
             
-# Хук для Allure — скриншоты/логи при падении (для API не скриншоты, но полезная информация)
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
@@ -96,10 +88,10 @@ def pytest_runtest_makereport(item, call):
             pass
 
 
-# Настройка Allure
+
 def pytest_configure(config):
     config._metadata = {
         "Project": "Petstore API",
-        "Framework": "Pytest + Requests",
+        "Framework": "Pytest + Requests + Pydantic",
         "Author": "Влад Лизогуб"
     }
