@@ -5,7 +5,6 @@ from factories.pet_factory import PetFactory
 from factories.order_factory import OrderFactory
 
 
-
 @pytest.fixture(scope="session")
 def client():
     client = PetStoreClient()

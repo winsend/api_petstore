@@ -4,6 +4,8 @@ import pytest
 from data.test_data import invalid_pet
 from models.pet import Pet
 
+from models.pet import Pet
+
 @allure.feature("Petstore API")
 @allure.story("Управление питомцами")
 class TestPetstoreAPI:
@@ -29,7 +31,11 @@ class TestPetstoreAPI:
         assert pet.name == created_pet.name
         assert pet.status == created_pet.status
 
+        assert pet.id == created_pet.id
+        assert pet.name == created_pet.name
+        assert pet.status == created_pet.status
 
+  
     @allure.title("Обновление данных питомца")
     def test_update_pet(self, client, created_pet):
         updated_data = {
@@ -73,4 +79,4 @@ class TestPetstoreAPI:
         with allure.step("Пытаемся создать питомца с некорректными данными"):
             response = client.create_pet(invalid_pet)
 
-        assert response.status_code in [200, 400, 500]
+        

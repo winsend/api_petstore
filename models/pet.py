@@ -1,8 +1,4 @@
 from pydantic import BaseModel, Field
-<<<<<<< HEAD
-=======
-
->>>>>>> fa5ed65 (Add cleanup after tests)
 from typing import List, Optional
 
 class Category(BaseModel):
