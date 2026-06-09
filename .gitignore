@@ -5,37 +5,15 @@ venv/
 
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-
-
-__pycache__/
-*.pyc
 .pytest_cache/
-
+.coverage
+htmlcov/
 allure-results/
 allure-report/
 
 
 .idea/
 .vscode/
-*.swp
-*.swo
-
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
